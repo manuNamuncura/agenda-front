@@ -6,16 +6,7 @@ import { MatchForm } from "./components/MatchForm";
 import MatchCard from "./components/MatchCard";
 import toast from "react-hot-toast";
 import { ConfirmModal } from "../../components/ui/ConfirmModal";
-
-interface Match {
-  id: string;
-  placeName: string;
-  date: Date;
-  goalsFor: number;
-  goalsAgainst: number;
-  courtType: string;
-  result: "WON" | "LOST" | "TIED";
-}
+import type { Match } from "../../types/match.types";
 
 const DashboardPage: React.FC = () => {
   const { user, token, isAuthenticated, logout } = useAuthStore();
@@ -28,6 +19,7 @@ const DashboardPage: React.FC = () => {
   >("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [matchToDelete, setMatchToDelete] = useState<string | null>(null);
+  const [editingMatch, setEditingMatch] = useState<Match | null | undefined>(undefined)
 
   const currentYear = new Date().getFullYear();
 
@@ -61,6 +53,16 @@ const DashboardPage: React.FC = () => {
     return isSelectedYear && matchesSearch && matchesResult;
   });
 
+  const handleEditClick = (match: Match) => {
+    setEditingMatch(match);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleFormSuccess = () => {
+    setEditingMatch(null);
+    fetchMatches();
+  };
+
   const fetchMatches = useCallback(async () => {
     if (!token) return;
 
@@ -79,7 +81,6 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && token) {
-      toast.success("Prueba");
       fetchMatches();
     }
   }, [isAuthenticated, token, fetchMatches]);
@@ -286,7 +287,7 @@ const DashboardPage: React.FC = () => {
           {/* Columna Izquierda: Formulario */}
           <div className="lg:col-span-1">
             <div className="sticky top-8">
-              <MatchForm onSuccess={fetchMatches} />
+              <MatchForm onSuccess={handleFormSuccess} initialData={editingMatch} />
             </div>
           </div>
 
@@ -366,6 +367,7 @@ const DashboardPage: React.FC = () => {
                       key={match.id}
                       match={match}
                       onDelete={handleDeleteClick}
+                      onEdit={() => handleEditClick(match)}
                     />
                   ))}
                 </div>

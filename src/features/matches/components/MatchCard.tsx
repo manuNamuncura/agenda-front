@@ -3,9 +3,11 @@
 const MatchCard = ({
   match,
   onDelete,
+  onEdit,
 }: {
   match: any;
   onDelete: (id: string) => void;
+  onEdit: () => void;
 }) => {
   const isWin = match.result === "WON";
   const isLost = match.result === "LOST";
@@ -59,7 +61,7 @@ const MatchCard = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-8">
+      <div className="flex items-center gap-4">
         <div className="text-right">
           <p className="text-3xl font-black tracking-tight text-white leading-none">
             {match.goalsFor} <span className="text-gray-600 text-xl">-</span>{" "}
@@ -74,6 +76,15 @@ const MatchCard = ({
             {match.performance.replace("_", " ")}
           </span>
         </div>
+
+        <button
+            onClick={onEdit} // 🚩 Botón Editar
+            className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
 
         <button
           onClick={() => onDelete(match.id)}

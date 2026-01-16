@@ -1,16 +1,28 @@
 // src/features/matches/components/MatchForm.tsx
-import React, { useState } from "react";
-import { matchService } from "../services/match.service";
+import React, { useState, useEffect } from "react";
+import { matchService, type UpdateMatchDTO } from "../services/match.service";
+import type { Match } from "../../../types/match.types";
 import toast from "react-hot-toast";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { es } from "date-fns/locale/es";
+import { TimePickerCustom } from "../../../components/ui/TimesPickerCustom";
 
 interface MatchFormProps {
   onSuccess: () => void;
+  initialData?: Match | null;
 }
 
-export const MatchForm: React.FC<MatchFormProps> = ({ onSuccess }) => {
+export const MatchForm: React.FC<MatchFormProps> = ({
+  onSuccess,
+  initialData,
+}) => {
   const [loading, setLoading] = useState(false);
+
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedTimeString, setSelectedTimeString] = useState("00:00");
+
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().slice(0, 16),
     courtType: "FIVE",
     category: "FRIENDS",
     placeName: "",
@@ -19,6 +31,47 @@ export const MatchForm: React.FC<MatchFormProps> = ({ onSuccess }) => {
     result: "WON",
     performance: "GOOD",
   });
+
+  useEffect(() => {
+    if (initialData) {
+      const dateObj = new Date(initialData.date);
+      setSelectedDate(dateObj);
+      setSelectedTimeString(dateObj.toTimeString().slice(0, 5));
+
+      setFormData({
+        courtType: initialData.courtType,
+        category: initialData.category,
+        placeName: initialData.placeName,
+        goalsFor: initialData.goalsFor,
+        goalsAgainst: initialData.goalsAgainst,
+        result: initialData.result,
+        performance: initialData.performance,
+      });
+    } else {
+      const now = new Date();
+      setSelectedDate(now);
+      setSelectedTimeString(now.toTimeString().slice(0, 5));
+      setFormData({
+        courtType: "FIVE",
+        category: "FRIENDS",
+        placeName: "",
+        goalsFor: 0,
+        goalsAgainst: 0,
+        result: "WON",
+        performance: "GOOD",
+      });
+    }
+  }, [initialData]);
+
+  const handleDateChange = (date: Date | null) => {
+    if (date) {
+      setSelectedDate(date);
+    }
+  };
+
+  const handleTimeChange = (newTime: string) => {
+    setSelectedTimeString(newTime);
+  };
 
   const performances = [
     {
@@ -54,34 +107,68 @@ export const MatchForm: React.FC<MatchFormProps> = ({ onSuccess }) => {
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const payload = {
-        ...formData,
-        date: new Date(formData.date).toISOString(),
-        placeId: formData.placeName.toLowerCase().replace(/\s+/g, "-"), // Placeholder
-        goalsFor: Number(formData.goalsFor),
-        goalsAgainst: Number(formData.goalsAgainst),
-      };
+  e.preventDefault();
+  
+  // 1. Validación inicial
+  if (!selectedDate || isNaN(selectedDate.getTime())) {
+    toast.error("Por favor selecciona una fecha válida");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    // 2. Combinar Fecha y Hora
+    const [hours, minutes] = selectedTimeString.split(":").map(Number);
+    const finalDate = new Date(selectedDate);
+    finalDate.setHours(hours, minutes, 0, 0);
+
+    const gFor = Number(formData.goalsFor);
+    const gAgainst = Number(formData.goalsAgainst);
+
+    let calculatedResult: Match['result'] = 'TIED';
+    if (gFor > gAgainst) calculatedResult = 'WON';
+    else if (gFor < gAgainst) calculatedResult = 'LOST';
+
+    // 3. Construcción del Payload con el tipo correcto
+    // (Asegúrate de importar UpdateMatchDTO de tu service)
+    const payload: UpdateMatchDTO = {
+      ...formData,
+
+      result: calculatedResult,
+
+      date: finalDate.toISOString(),
+      placeId: formData.placeName.trim().toLowerCase().replace(/\s+/g, "-"),
+      goalsFor: Number(formData.goalsFor),
+      goalsAgainst: Number(formData.goalsAgainst),
+
+
+      courtType: formData.courtType as Match['courtType'],
+      category: formData.category as Match['category'],
+      performance: formData.performance as Match['performance'],
+
+      
+    };
+
+    // 4. Ejecución según el modo (Edición o Creación)
+    if (initialData) {
+      // PATCH para actualizar
+      await matchService.updateMatch(initialData.id, payload);
+      toast.success("¡Partido actualizado!", { icon: "🔄" });
+    } else {
+      // POST para crear
       await matchService.createMatch(payload);
-      toast.success('⚽ ¡Partido registrado con éxito!', {
-        icon: '🔥',
-        duration: 4000, 
-      })
-      onSuccess();
-      setFormData((prev) => ({
-        ...prev,
-        placeName: "",
-        goalsFor: 0,
-        goalsAgainst: 0,
-      }));
-    } catch (err) {
-      alert("Error al guardar el partido");
-    } finally {
-      setLoading(false);
+      toast.success("¡Partido registrado!", { icon: "🔥" });
     }
-  };
+
+    onSuccess(); // Cierra el modal y refresca la lista
+  } catch (err) {
+    toast.error("Error al procesar el partido");
+    console.error("Error en MatchForm:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="bg-white/3 border border-white/10 rounded-3xl p-6 backdrop-blur-xl shadow-2xl">
@@ -102,7 +189,9 @@ export const MatchForm: React.FC<MatchFormProps> = ({ onSuccess }) => {
             <path d="M12 5v14" />
           </svg>
         </div>
-        <h3 className="text-xl font-black tracking-tight">NUEVO PARTIDO</h3>
+        <h3 className="text-xl font-black tracking-tight">
+          {initialData ? "EDITAR PARTIDO" : "NUEVO PARTIDO"}
+        </h3>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -184,14 +273,29 @@ export const MatchForm: React.FC<MatchFormProps> = ({ onSuccess }) => {
         {/* Fecha y Hora */}
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">
-            Fecha y Hora
+            Fecha de Partido
           </label>
-          <input
-            type="datetime-local"
-            required
+          <DatePicker
+            selected={selectedDate}
+            onChange={handleDateChange}
+            dateFormat="dd/MM/yyyy"
+            locale={es}
             className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-green-500/50"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            showTimeSelect={false}
+            showPopperArrow={false}
+            popperPlacement="bottom-start"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">
+            Hora de Partido
+          </label>
+          <TimePickerCustom
+            selectedTime={selectedTimeString}
+            onChange={handleTimeChange}
+            minuteInterval={10}
+            hourInterval={1}
           />
         </div>
 
@@ -215,7 +319,7 @@ export const MatchForm: React.FC<MatchFormProps> = ({ onSuccess }) => {
               >
                 <span className="text-2xl">{p.emoji}</span>
                 <span className="text-[8px] font-bold uppercase tracking-tighter text-gray-400">
-                  {p.label} 
+                  {p.label}
                 </span>
               </button>
             ))}
@@ -228,7 +332,11 @@ export const MatchForm: React.FC<MatchFormProps> = ({ onSuccess }) => {
           disabled={loading}
           className="w-full bg-green-500 hover:bg-green-400 disabled:bg-gray-800 disabled:text-gray-600 text-black font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] mt-4 active:scale-95"
         >
-          {loading ? "GUARDANDO..." : "REGISTRAR PARTIDO"}
+          {loading
+            ? "GUARDANDO..."
+            : initialData
+            ? "ACTUALIZAR CAMBIOS"
+            : "REGISTRAR PARTIDO"}
         </button>
       </form>
     </div>
