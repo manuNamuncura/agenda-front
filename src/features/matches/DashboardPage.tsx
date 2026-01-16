@@ -154,7 +154,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header Mejorado */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-white/5 pb-8">
           <div className="flex items-center gap-5">
@@ -283,100 +283,94 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Layout Principal Reorganizado */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Columna Izquierda: Formulario */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8">
+          <div className="lg:col-span-4">
+            <div className="lg:sticky lg:top-8">
               <MatchForm onSuccess={handleFormSuccess} initialData={editingMatch} />
             </div>
           </div>
 
-          {/* Barra de Filtros */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
-            {/* Buscador */}
-            <div className="relative w-full md:w-72 group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg
-                  className="w-4 h-4 text-gray-500 group-focus-within:text-green-500 transition-colors"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <input
-                type="text"
-                placeholder="Buscar cancha..."
-                className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/50 transition-all"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+          {/* COLUMNA DERECHA: Filtros + Lista (8 de 12 columnas) */}
+          <div className="lg:col-span-8 space-y-8">
+            
+            {/* Título y Filtros Agrupados */}
+            <div className="bg-white/3 border border-white/5 p-6 rounded-3xl">
+              <div className="flex flex-col xl:flex-row gap-6 justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 w-full xl:w-auto">
+                  <span className="w-2 h-8 bg-green-500 rounded-full"></span>
+                  Partidos Recientes
+                </h2>
 
-            {/* Selectores de Resultado (Tabs) */}
-            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10 w-full md:w-auto">
-              {(["ALL", "WON", "LOST"] as const).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setFilterResult(type)}
-                  className={`flex-1 md:flex-none px-6 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${
-                    filterResult === type
-                      ? "bg-white text-black shadow-lg"
-                      : "text-gray-500 hover:text-white"
-                  }`}
-                >
-                  {type === "ALL"
-                    ? "TODOS"
-                    : type === "WON"
-                    ? "VICTORIAS"
-                    : "DERROTAS"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Columna Derecha: Lista de Partidos */}
-          <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <span className="w-2 h-8 bg-green-500 rounded-full"></span>
-              Partidos Recientes
-            </h2>
-
-            {error && (
-              <div className="bg-red-500/20 border border-red-500 text-red-200 p-4 rounded-lg mb-6">
-                {error}
-              </div>
-            )}
-
-            <div className="relative bg-white/5 rounded-2xl border border-white/10 overflow-hidden min-h-100">
-              {isLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-                </div>
-              ) : filteredMatches.length > 0 ? (
-                <div className="flex flex-col gap-3 mt-8">
-                  {filteredMatches.map((match) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      onDelete={handleDeleteClick}
-                      onEdit={() => handleEditClick(match)}
+                {/* Buscador + Tabs dentro de la misma zona */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+                  {/* Buscador */}
+                  <div className="relative group flex-1 sm:w-64">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-500 group-focus-within:text-green-500 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Buscar cancha..."
+                      className="block w-full pl-11 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/50 transition-all"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                  ))}
+                  </div>
+
+                  {/* Tabs Filtro */}
+                  <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 h-11.5">
+                    {(["ALL", "WON", "LOST", "TIED"] as const).map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setFilterResult(type)}
+                        className={`px-4 py-1.5 rounded-lg text-[9px] font-black tracking-widest transition-all ${
+                          filterResult === type
+                            ? "bg-white text-black shadow-lg"
+                            : "text-gray-500 hover:text-white"
+                        }`}
+                      >
+                        {type === "ALL" ? "ALL" : type}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
-                  <p className="text-xl">Aún no tienes partidos registrados</p>
-                  <p className="text-sm">¡Usa el formulario para empezar!</p>
-                </div>
-              )}
+              </div>
+
+              {/* Lista de Partidos (dentro del mismo contenedor visual) */}
+              <div className="space-y-4">
+                {error && (
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-sm italic">
+                    {error}
+                  </div>
+                )}
+
+                {isLoading ? (
+                  <div className="py-20 flex flex-col items-center justify-center gap-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-green-500"></div>
+                    <p className="text-gray-500 text-xs font-bold tracking-widest uppercase">Cargando Stats...</p>
+                  </div>
+                ) : filteredMatches.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-3">
+                    {filteredMatches.map((match) => (
+                      <MatchCard
+                        key={match.id}
+                        match={match}
+                        onDelete={handleDeleteClick}
+                        onEdit={() => handleEditClick(match)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-20 text-center">
+                    <p className="text-gray-500 text-lg font-medium">No hay coincidencias</p>
+                    <p className="text-gray-700 text-sm mt-1">Intenta cambiar los filtros o el año</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
