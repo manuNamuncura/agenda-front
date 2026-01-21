@@ -10,13 +10,6 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       setAuth: (data: AuthResponse) => {
-        if (!data.token) {
-          console.error(
-            "❌ ERROR CRÍTICO: El token es undefined. Revisa la respuesta del backend."
-          );
-          return;
-        }
-
         // Guardar string puro para el interceptor
         localStorage.setItem("auth_token", data.token);
 
@@ -25,6 +18,12 @@ export const useAuthStore = create<AuthState>()(
           token: data.token,
           isAuthenticated: true,
         });
+      },
+
+      updateUser: (userData: any) => {
+        set((state) => ({
+          user: { ...state.user, ...userData }
+        }));
       },
 
       logout: () => {

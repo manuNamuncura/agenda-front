@@ -3,7 +3,7 @@ import { useAuthStore } from "./store/useAuthStore";
 import { authService } from "./services/auth.service";
 import SpotlightCard from "../../components/bits/SpotlightCard";
 import { Loader2, Mail, Trophy, Lock } from "lucide-react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 const LoginPage = () => {
   const [identifier, setIdentifier] = useState("");
@@ -101,9 +101,12 @@ const LoginPage = () => {
 
         <p className="mt-8 text-center text-sm text-gray-500">
           ¿No tienes cuenta?{" "}
-          <a href="#" className="text-green-500 hover:underline">
-            Regístrate
-          </a>
+          <Link
+            to="/register"
+            className="text-green-500 hoverline forn-medium"
+          >
+            Regístrate aquí
+          </Link>
         </p>
       </SpotlightCard>
     </div>

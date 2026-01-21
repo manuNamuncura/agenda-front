@@ -4,6 +4,7 @@ import './App.css';
 import { useAuthStore } from './features/auth/store/useAuthStore';
 import LoginPage from './features/auth/LoginPage';
 import DashboardPage from './features/matches/DashboardPage';
+import { RegisterPage } from './features/auth/RegisterPage';
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -37,6 +38,11 @@ function App() {
           element={!isAuthenticated ? <LoginPage/> : <Navigate to="/dashboard" replace/>}
         />
 
+        <Route 
+          path='/register'
+          element={!isAuthenticated ? <RegisterPage/> : <Navigate to="/dashboard" replace/>}
+        />
+
         {/* Ruta Privada: Dashboard */}
         <Route
           path='/dashboard'
@@ -48,6 +54,8 @@ function App() {
           path='/'
           element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
         />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
