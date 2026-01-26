@@ -1,30 +1,37 @@
+// src/features/auth/LoginPage.tsx
+
 import React, { useState } from "react";
 import { useAuthStore } from "./store/useAuthStore";
 import { authService } from "./services/auth.service";
 import SpotlightCard from "../../components/bits/SpotlightCard";
-import { Loader2, Mail, Trophy, Lock } from "lucide-react";
-import { useNavigate } from "react-router";
+import { Mail, Trophy, Lock } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await authService.login(identifier, password);
-      setAuth(response);
-      navigate('/dashboard')
-    } catch (error) {
-      alert("Error al iniciar sesión. Revisa tus credenciales.");
-    } finally {
-      setLoading(false);
-    }
+
+    toast.promise(authService.login(identifier, password), {
+      loading: "Iniciando sesión...",
+      success: (response) => {
+        setAuth(response);
+        navigate("/dashboard");
+        return "¡Bienvenido de nuevo! ⚽";
+      },
+      error: (err: any) => {
+        if (err?.response?.status === 401) {
+          return "Usuario o contraseña incorrecta.";
+        }
+        return "Error al iniciar sesión.";
+      },
+    });
   };
 
   return (
@@ -88,22 +95,17 @@ const LoginPage = () => {
 
           <button
             type="submit"
-            disabled={loading}
             className="flex w-full items-center justify-center rounded-xl bg-green-600 py-3 font-semibold text-white transition-all hover:bg-green-500 active:scale-[0.98] disabled:opacity-50"
           >
-            {loading ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              "Entrar a la Cancha"
-            )}
+            "Entrar a la Cancha"
           </button>
         </form>
 
         <p className="mt-8 text-center text-sm text-gray-500">
           ¿No tienes cuenta?{" "}
-          <a href="#" className="text-green-500 hover:underline">
+          <Link to="/register" className="text-green-500 hover:underline">
             Regístrate
-          </a>
+          </Link>
         </p>
       </SpotlightCard>
     </div>
