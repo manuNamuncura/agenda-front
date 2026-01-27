@@ -40,7 +40,7 @@ function App() {
 
         <Route
           path='/register'
-          element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" replace/>}
+          element={!isAuthenticated ? <RegisterPage/> : <Navigate to="/dashboard" replace/>}
         />
 
         {/* Ruta Privada: Dashboard */}
@@ -54,6 +54,8 @@ function App() {
           path='/'
           element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
         />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
