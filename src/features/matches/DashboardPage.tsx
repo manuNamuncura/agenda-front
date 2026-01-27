@@ -19,7 +19,9 @@ const DashboardPage: React.FC = () => {
   >("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [matchToDelete, setMatchToDelete] = useState<string | null>(null);
-  const [editingMatch, setEditingMatch] = useState<Match | null | undefined>(undefined)
+  const [editingMatch, setEditingMatch] = useState<Match | null | undefined>(
+    undefined,
+  );
 
   const currentYear = new Date().getFullYear();
 
@@ -31,7 +33,7 @@ const DashboardPage: React.FC = () => {
         ? Math.round(
             (matches.filter((m) => m.result === "WON").length /
               matches.length) *
-              100
+              100,
           )
         : 0,
     avgGoals:
@@ -55,7 +57,7 @@ const DashboardPage: React.FC = () => {
 
   const handleEditClick = (match: Match) => {
     setEditingMatch(match);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleFormSuccess = () => {
@@ -88,23 +90,20 @@ const DashboardPage: React.FC = () => {
   const handleDeleteClick = (id: string) => {
     setMatchToDelete(id);
     setIsModalOpen(true);
-  }
+  };
 
   const confirmDelete = async () => {
     if (!matchToDelete) return;
 
-    toast.promise(
-      matchService.deleteMatch(matchToDelete),
-      {
-        loading: 'Borrando...',
-        success: () => {
-          fetchMatches();
-          return 'Partido eliminado';
-        },
-        error: 'Error al borrar',
-      }
-    )
-  }
+    toast.promise(matchService.deleteMatch(matchToDelete), {
+      loading: "Borrando...",
+      success: () => {
+        fetchMatches();
+        return "Partido eliminado";
+      },
+      error: "Error al borrar",
+    });
+  };
 
   const getPlayerRank = (winRate: number, totalMatches: number) => {
     if (totalMatches < 5)
@@ -195,22 +194,22 @@ const DashboardPage: React.FC = () => {
                           m.result === "WON"
                             ? "Victoria"
                             : m.result === "LOST"
-                            ? "Derrota"
-                            : "Empate"
+                              ? "Derrota"
+                              : "Empate"
                         }
                         className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black transition-transform hover:scale-110 cursor-help ${
                           m.result === "WON"
                             ? "bg-green-500 text-black shadow-[0_0_10px_rgba(34,197,94,0.3)]"
                             : m.result === "LOST"
-                            ? "bg-red-500/20 text-red-500 border border-red-500/30"
-                            : "bg-gray-500/20 text-gray-400 border border-white/10"
+                              ? "bg-red-500/20 text-red-500 border border-red-500/30"
+                              : "bg-gray-500/20 text-gray-400 border border-white/10"
                         }`}
                       >
                         {m.result === "WON"
                           ? "W"
                           : m.result === "LOST"
-                          ? "L"
-                          : "D"}
+                            ? "L"
+                            : "D"}
                       </div>
                     ))
                   ) : (
@@ -288,13 +287,15 @@ const DashboardPage: React.FC = () => {
           {/* Columna Izquierda: Formulario */}
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-8">
-              <MatchForm onSuccess={handleFormSuccess} initialData={editingMatch} />
+              <MatchForm
+                onSuccess={handleFormSuccess}
+                initialData={editingMatch}
+              />
             </div>
           </div>
 
           {/* COLUMNA DERECHA: Filtros + Lista (8 de 12 columnas) */}
           <div className="lg:col-span-8 space-y-8">
-            
             {/* Título y Filtros Agrupados */}
             <div className="bg-white/3 border border-white/5 p-6 rounded-3xl">
               <div className="flex flex-col xl:flex-row gap-6 justify-between items-center mb-6">
@@ -308,8 +309,19 @@ const DashboardPage: React.FC = () => {
                   {/* Buscador */}
                   <div className="relative group flex-1 sm:w-64">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <svg className="w-4 h-4 text-gray-500 group-focus-within:text-green-500 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z" />
+                      <svg
+                        className="w-4 h-4 text-gray-500 group-focus-within:text-green-500 transition-colors"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"
+                        />
                       </svg>
                     </div>
                     <input
@@ -349,11 +361,15 @@ const DashboardPage: React.FC = () => {
                 )}
 
                 {isLoading ? (
+                  // 1️⃣ Loading
                   <div className="py-20 flex flex-col items-center justify-center gap-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-green-500"></div>
-                    <p className="text-gray-500 text-xs font-bold tracking-widest uppercase">Cargando Stats...</p>
+                    <p className="text-gray-500 text-xs font-bold tracking-widest uppercase">
+                      Cargando Stats...
+                    </p>
                   </div>
                 ) : filteredMatches.length > 0 ? (
+                  // 2️⃣ Hay partidos
                   <div className="grid grid-cols-1 gap-3">
                     {filteredMatches.map((match) => (
                       <MatchCard
@@ -365,9 +381,15 @@ const DashboardPage: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-20 text-center">
-                    <p className="text-gray-500 text-lg font-medium">No hay coincidencias</p>
-                    <p className="text-gray-700 text-sm mt-1">Intenta cambiar los filtros o el año</p>
+                  // 3️⃣ No hay partidos (tu nuevo diseño)
+                  <div className="flex flex-col items-center justify-center py-12 opacity-60">
+                    <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                      <span className="text-2xl">⚽</span>
+                    </div>
+                    <p className="text-gray-400 font-medium">Historial vacío</p>
+                    <p className="text-gray-600 text-xs mt-1">
+                      ¡Registra tu primer partido del año!
+                    </p>
                   </div>
                 )}
               </div>
@@ -375,7 +397,7 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={confirmDelete}

@@ -1,3 +1,5 @@
+// src/features/auth/store/useAuthStore.ts
+
 import { persist } from "zustand/middleware";
 import type { AuthResponse, AuthState } from "../../../types/auth.types";
 import { create } from "zustand";

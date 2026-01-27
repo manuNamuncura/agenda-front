@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
-import { Toaster } from 'react-hot-toast'; // 1. Importamos el Toaster
+import { Toaster } from 'react-hot-toast'; 
 import './App.css';
 import { useAuthStore } from './features/auth/store/useAuthStore';
 import LoginPage from './features/auth/LoginPage';
