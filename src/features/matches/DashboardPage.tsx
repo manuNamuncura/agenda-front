@@ -7,6 +7,7 @@ import MatchCard from "./components/MatchCard";
 import toast from "react-hot-toast";
 import { ConfirmModal } from "../../components/ui/ConfirmModal";
 import type { Match } from "../../types/match.types";
+import { useNavigate } from "react-router";
 
 const DashboardPage: React.FC = () => {
   const { user, token, isAuthenticated, logout } = useAuthStore();
@@ -22,6 +23,7 @@ const DashboardPage: React.FC = () => {
   const [editingMatch, setEditingMatch] = useState<Match | null | undefined>(
     undefined,
   );
+  const navigate = useNavigate();
 
   const currentYear = new Date().getFullYear();
 
@@ -31,16 +33,16 @@ const DashboardPage: React.FC = () => {
     winRate:
       matches.length > 0
         ? Math.round(
-            (matches.filter((m) => m.result === "WON").length /
-              matches.length) *
-              100,
-          )
+          (matches.filter((m) => m.result === "WON").length /
+            matches.length) *
+          100,
+        )
         : 0,
     avgGoals:
       matches.length > 0
         ? (
-            matches.reduce((acc, m) => acc + m.goalsFor, 0) / matches.length
-          ).toFixed(1)
+          matches.reduce((acc, m) => acc + m.goalsFor, 0) / matches.length
+        ).toFixed(1)
         : 0,
   };
 
@@ -197,13 +199,12 @@ const DashboardPage: React.FC = () => {
                               ? "Derrota"
                               : "Empate"
                         }
-                        className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black transition-transform hover:scale-110 cursor-help ${
-                          m.result === "WON"
+                        className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black transition-transform hover:scale-110 cursor-help ${m.result === "WON"
                             ? "bg-green-500 text-black shadow-[0_0_10px_rgba(34,197,94,0.3)]"
                             : m.result === "LOST"
                               ? "bg-red-500/20 text-red-500 border border-red-500/30"
                               : "bg-gray-500/20 text-gray-400 border border-white/10"
-                        }`}
+                          }`}
                       >
                         {m.result === "WON"
                           ? "W"
@@ -223,9 +224,32 @@ const DashboardPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto">
+            {/* NUEVO BOTÓN - Estadísticas por Lugar */}
+            <button
+              onClick={() => navigate('/places/stats')}
+              className="flex-1 md:flex-none bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 hover:border-blue-500/40 px-5 py-3 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 3v18h18" />
+                <path d="m19 9-5 5-4-4-3 3" />
+              </svg>
+              Estadísticas
+            </button>
+
+            {/* Botón de Cerrar Sesión existente */}
             <button
               onClick={logout}
-              className="flex-1 md:flex-none bg-white/5 hover:bg-red-500/10 hover:text-red-500 border border-white/10 hover:border-red-500/50 px-6 py-3 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"
+              className="flex-1 md:flex-none bg-white/5 hover:bg-red-500/10 hover:text-red-500 border border-white/10 hover:border-red-500/50 px-5 py-3 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"
             >
               Cerrar Sesión
             </button>
@@ -273,9 +297,8 @@ const DashboardPage: React.FC = () => {
               {matches.slice(0, 5).map((m, i) => (
                 <div
                   key={i}
-                  className={`h-1.5 flex-1 rounded-full ${
-                    m.result === "WON" ? "bg-green-500" : "bg-red-500/30"
-                  }`}
+                  className={`h-1.5 flex-1 rounded-full ${m.result === "WON" ? "bg-green-500" : "bg-red-500/30"
+                    }`}
                 ></div>
               ))}
             </div>
@@ -339,11 +362,10 @@ const DashboardPage: React.FC = () => {
                       <button
                         key={type}
                         onClick={() => setFilterResult(type)}
-                        className={`px-4 py-1.5 rounded-lg text-[9px] font-black tracking-widest transition-all ${
-                          filterResult === type
+                        className={`px-4 py-1.5 rounded-lg text-[9px] font-black tracking-widest transition-all ${filterResult === type
                             ? "bg-white text-black shadow-lg"
                             : "text-gray-500 hover:text-white"
-                        }`}
+                          }`}
                       >
                         {type === "ALL" ? "ALL" : type}
                       </button>

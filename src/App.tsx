@@ -1,10 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
-import { Toaster } from 'react-hot-toast'; 
+import { Toaster } from 'react-hot-toast';
 import './App.css';
 import { useAuthStore } from './features/auth/store/useAuthStore';
 import LoginPage from './features/auth/LoginPage';
 import DashboardPage from './features/matches/DashboardPage';
 import { RegisterPage } from './features/auth/RegisterPage';
+import PlaceStatsPage from './features/matches/PlaceStatsPage';
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -35,18 +36,23 @@ function App() {
         {/* Ruta Pública */}
         <Route
           path='/login'
-          element={!isAuthenticated ? <LoginPage/> : <Navigate to="/dashboard" replace/>}
+          element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />}
         />
 
         <Route
           path='/register'
-          element={!isAuthenticated ? <RegisterPage/> : <Navigate to="/dashboard" replace/>}
+          element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" replace />}
         />
 
         {/* Ruta Privada: Dashboard */}
         <Route
           path='/dashboard'
           element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" replace />}
+        />
+
+        <Route
+          path='/places/stats'
+          element={isAuthenticated ? <PlaceStatsPage /> : <Navigate to="/login" replace />}
         />
 
         {/* Redirección inicial */}
