@@ -11,15 +11,15 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Toaster 
+      <Toaster
         position="top-right"
         reverseOrder={false}
         toastOptions={{
           style: {
-            background: '#1a1a1a', 
-            color: '#fff',         
+            background: '#1a1a1a',
+            color: '#fff',
             border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '16px',   
+            borderRadius: '16px',
             fontSize: '14px',
           },
           success: {
@@ -38,7 +38,7 @@ function App() {
           element={!isAuthenticated ? <LoginPage/> : <Navigate to="/dashboard" replace/>}
         />
 
-        <Route 
+        <Route
           path='/register'
           element={!isAuthenticated ? <RegisterPage/> : <Navigate to="/dashboard" replace/>}
         />

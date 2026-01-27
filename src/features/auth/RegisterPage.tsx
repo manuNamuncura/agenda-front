@@ -22,7 +22,7 @@ export const RegisterPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     toast.promise(
         authService.signUp(formData),
         {
