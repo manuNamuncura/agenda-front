@@ -20,7 +20,6 @@ export const MatchForm: React.FC<MatchFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedTimeString, setSelectedTimeString] = useState("00:00");
 
