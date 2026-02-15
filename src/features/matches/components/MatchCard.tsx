@@ -1,5 +1,6 @@
-// src/features/matches/MatchCard.tsx
+import { useState } from "react";
 import { cn } from "../../../utils/cn";
+import { Trash2, Edit3, AlertTriangle, X } from "lucide-react";
 
 const MatchCard = ({
   match,
@@ -10,6 +11,8 @@ const MatchCard = ({
   onDelete: (id: string) => void;
   onEdit: () => void;
 }) => {
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const isWin = match.result === "WON";
   const isLost = match.result === "LOST";
 
@@ -30,7 +33,43 @@ const MatchCard = ({
   };
 
   return (
-    <div className="group bg-white/3 border border-white/10 rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-white/[0.07] hover:border-white/20 transition-all duration-300">
+    <div className="relative group bg-white/3 border border-white/10 rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-white/[0.07] hover:border-white/20 transition-all duration-300">
+      {/* --- MODAL DE CONFIRMACIÓN OVERLAY --- */}
+      {showConfirm && (
+        <div className="absolute inset-0 z-10 bg-black/90 backdrop-blur-sm rounded-2xl flex items-center justify-between px-4 animate-in fade-in zoom-in duration-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center text-red-500">
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <p className="text-white text-xs font-black uppercase tracking-widest">
+                ¿Borrar partido?
+              </p>
+              <p className="text-gray-500 text-[10px]">
+                Esta acción no se puede deshacer
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="p-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+            <button
+              onClick={() => {
+                onDelete(match.id);
+                setShowConfirm(false);
+              }}
+              className="bg-red-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all"
+            >
+              Confirmar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* SECCIÓN IZQUIERDA: Info del partido */}
       <div className="flex items-center gap-4 w-full sm:w-auto">
         <div
@@ -39,12 +78,11 @@ const MatchCard = ({
             isWin
               ? "bg-green-500/20 text-green-500"
               : isLost
-              ? "bg-red-500/20 text-red-500"
-              : "bg-gray-500/20 text-gray-400"
+                ? "bg-red-500/20 text-red-500"
+                : "bg-gray-500/20 text-gray-400",
           )}
         >
           {match.result === "WON" ? "W" : match.result === "LOST" ? "L" : "D"}
-          <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-current opacity-50 animate-pulse"></div>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -63,7 +101,6 @@ const MatchCard = ({
 
       {/* SECCIÓN DERECHA: Marcador y Acciones */}
       <div className="flex items-center justify-between sm:justify-end gap-4 md:gap-6 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-white/5">
-        {/* Marcador y Performance */}
         <div className="flex flex-col items-start sm:items-end">
           <p className="text-2xl md:text-3xl font-black tracking-tight text-white leading-none">
             {match.goalsFor}{" "}
@@ -73,13 +110,14 @@ const MatchCard = ({
           <span
             className={cn(
               "inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-widest uppercase",
-              performanceColors[match.performance]
+              performanceColors[match.performance] ||
+                "bg-gray-500/10 text-gray-400",
             )}
           >
             <span className="text-sm">
-              {performanceEmojis[match.performance]}
+              {performanceEmojis[match.performance] || "😶"}
             </span>
-            {match.performance.replace("_", " ")}
+            {match.performance.replace("_", " ") || "NEUTRAL"}
           </span>
         </div>
 
@@ -89,39 +127,14 @@ const MatchCard = ({
             onClick={onEdit}
             className="p-2 md:p-2.5 bg-blue-500/10 text-blue-400 rounded-xl hover:bg-blue-500 hover:text-white transition-all active:scale-95"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-              />
-            </svg>
+            <Edit3 size={18} />
           </button>
 
           <button
-            onClick={() => onDelete(match.id)}
+            onClick={() => setShowConfirm(true)}
             className="p-2 md:p-2.5 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all active:scale-95"
-            title="Eliminar partido"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-            </svg>
+            <Trash2 size={18} />
           </button>
         </div>
       </div>

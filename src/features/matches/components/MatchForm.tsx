@@ -1,12 +1,10 @@
 // src/features/matches/components/MatchForm.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { matchService, type UpdateMatchDTO } from "../services/match.service";
 import type { Match } from "../../../types/match.types";
 import toast from "react-hot-toast";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { es } from "date-fns/locale/es";
 import { TimePickerCustom } from "../../../components/ui/TimesPickerCustom";
+import { Calendar, Plus, Minus, MapPin } from "lucide-react";
 
 interface MatchFormProps {
   onSuccess: () => void;
@@ -20,7 +18,7 @@ export const MatchForm: React.FC<MatchFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTimeString, setSelectedTimeString] = useState("00:00");
 
   const [formData, setFormData] = useState({
@@ -33,12 +31,21 @@ export const MatchForm: React.FC<MatchFormProps> = ({
     performance: "GOOD",
   });
 
-  // Cargar sugerencias de lugares existentes
+  // Generador de los últimos 7 días para el selector rápido
+  const quickDates = useMemo(() => {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d);
+    }
+    return days;
+  }, []);
+
   useEffect(() => {
     loadPlaceSuggestions();
   }, []);
 
-  // Cargar datos iniciales
   useEffect(() => {
     if (initialData) {
       const dateObj = new Date(initialData.date);
@@ -63,43 +70,20 @@ export const MatchForm: React.FC<MatchFormProps> = ({
 
   const loadPlaceSuggestions = async () => {
     try {
-      // Obtener partidos del usuario para extraer lugares únicos
       const matches = await matchService.getAllMatches();
-
-      const placesMap = new Map();
-
-      matches.forEach(match => {
-        if (match.placeName) {
-          // Normalizar: minúsculas, sin espacios extra
-          const normalized = match.placeName
-            .toLowerCase()
-            .trim()
-            .replace(/\s+/g, ' ');
-
-          // Mantener el nombre original más usado o el primero
-          if (!placesMap.has(normalized)) {
-            placesMap.set(normalized, match.placeName);
-          }
-        }
-      });
-
-      // Extraer lugares únicos de los partidos
       const uniquePlaces = Array.from(
-        new Set(matches.map(match => match.placeName).filter(Boolean))
+        new Set(matches.map((match) => match.placeName).filter(Boolean)),
       ).sort();
-
       setSuggestions(uniquePlaces);
     } catch (err) {
-      console.error('Error al cargar sugerencias:', err);
+      console.error("Error al cargar sugerencias:", err);
     }
   };
 
   const handlePlaceChange = (value: string) => {
     setFormData({ ...formData, placeName: value });
-
-    // Filtrar sugerencias
-    const filtered = suggestions.filter(place =>
-      place.toLowerCase().includes(value.toLowerCase())
+    const filtered = suggestions.filter((place) =>
+      place.toLowerCase().includes(value.toLowerCase()),
     );
     setShowSuggestions(value.length > 0 && filtered.length > 0);
   };
@@ -109,14 +93,51 @@ export const MatchForm: React.FC<MatchFormProps> = ({
     setShowSuggestions(false);
   };
 
-  const handleDateChange = (date: Date | null) => {
-    if (date) {
-      setSelectedDate(date);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.placeName.trim()) {
+      toast.error("Por favor ingresa un lugar");
+      return;
     }
-  };
 
-  const handleTimeChange = (newTime: string) => {
-    setSelectedTimeString(newTime);
+    setLoading(true);
+    try {
+      const [hours, minutes] = selectedTimeString.split(":").map(Number);
+      const finalDate = new Date(selectedDate);
+      finalDate.setHours(hours, minutes, 0, 0);
+
+      const gFor = Number(formData.goalsFor);
+      const gAgainst = Number(formData.goalsAgainst);
+
+      let calculatedResult: Match["result"] = "TIED";
+      if (gFor > gAgainst) calculatedResult = "WON";
+      else if (gFor < gAgainst) calculatedResult = "LOST";
+
+      const payload: UpdateMatchDTO = {
+        ...formData,
+        result: calculatedResult,
+        date: finalDate.toISOString(),
+        placeId: formData.placeName.trim().toLowerCase().replace(/\s+/g, "-"),
+        goalsFor: gFor,
+        goalsAgainst: gAgainst,
+        courtType: formData.courtType as Match["courtType"],
+        category: formData.category as Match["category"],
+        performance: formData.performance as Match["performance"],
+      };
+
+      if (initialData) {
+        await matchService.updateMatch(initialData.id, payload);
+        toast.success("¡Partido actualizado!", { icon: "🔄" });
+      } else {
+        await matchService.createMatch(payload);
+        toast.success("¡Partido registrado!", { icon: "🔥" });
+      }
+      onSuccess();
+    } catch (err) {
+      toast.error("Error al procesar el partido");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const performances = [
@@ -152,239 +173,181 @@ export const MatchForm: React.FC<MatchFormProps> = ({
     },
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedDate || isNaN(selectedDate.getTime())) {
-      toast.error("Por favor selecciona una fecha válida");
-      return;
-    }
-
-    if (!formData.placeName.trim()) {
-      toast.error("Por favor ingresa un lugar");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const [hours, minutes] = selectedTimeString.split(":").map(Number);
-      const finalDate = new Date(selectedDate);
-      finalDate.setHours(hours, minutes, 0, 0);
-
-      const gFor = Number(formData.goalsFor);
-      const gAgainst = Number(formData.goalsAgainst);
-
-      let calculatedResult: Match['result'] = 'TIED';
-      if (gFor > gAgainst) calculatedResult = 'WON';
-      else if (gFor < gAgainst) calculatedResult = 'LOST';
-
-      const payload: UpdateMatchDTO = {
-        ...formData,
-        result: calculatedResult,
-        date: finalDate.toISOString(),
-        placeId: formData.placeName.trim().toLowerCase().replace(/\s+/g, "-"),
-        goalsFor: Number(formData.goalsFor),
-        goalsAgainst: Number(formData.goalsAgainst),
-        courtType: formData.courtType as Match['courtType'],
-        category: formData.category as Match['category'],
-        performance: formData.performance as Match['performance'],
-      };
-
-      if (initialData) {
-        await matchService.updateMatch(initialData.id, payload);
-        toast.success("¡Partido actualizado!", { icon: "🔄" });
-      } else {
-        await matchService.createMatch(payload);
-        toast.success("¡Partido registrado!", { icon: "🔥" });
-      }
-
-      onSuccess();
-    } catch (err) {
-      toast.error("Error al procesar el partido");
-      console.error("Error en MatchForm:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="bg-white/3 border border-white/10 rounded-3xl p-6 backdrop-blur-xl shadow-2xl">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-black">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5 12h14" />
-            <path d="M12 5v14" />
-          </svg>
-        </div>
-        <h3 className="text-xl font-black tracking-tight">
-          {initialData ? "EDITAR PARTIDO" : "NUEVO PARTIDO"}
-        </h3>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Lugar con autocompletado */}
-        <div className="space-y-2 relative">
+    <div className="w-full">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* LUGAR */}
+        <div className="space-y-3 relative">
           <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">
-            Lugar de la Cancha
+            Escenario
           </label>
-          <input
-            type="text"
-            placeholder="Ej: Stadium 5"
-            required
-            className="w-full bg-gray/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-green-500/50 transition-all placeholder:text-gray-700"
-            value={formData.placeName}
-            onChange={(e) => handlePlaceChange(e.target.value)}
-            onFocus={() => {
-              if (formData.placeName.length > 0) {
-                setShowSuggestions(true);
+          <div className="relative group">
+            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-green-500 transition-colors" />
+            <input
+              type="text"
+              placeholder="Ej: Stadium 5"
+              required
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-green-500/50 transition-all"
+              value={formData.placeName}
+              onChange={(e) => handlePlaceChange(e.target.value)}
+              onFocus={() =>
+                formData.placeName.length > 0 && setShowSuggestions(true)
               }
-            }}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          />
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            />
+          </div>
 
-          {/* Sugerencias de autocompletado */}
           {showSuggestions && (
-            <div className="absolute z-10 w-full mt-1 bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-2xl">
-              <div className="py-2">
-                <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                  Lugares anteriores
-                </div>
-                {suggestions
-                  .filter(place =>
-                    place.toLowerCase().includes(formData.placeName.toLowerCase())
-                  )
-                  .map((place, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => selectSuggestion(place)}
-                      className="w-full text-left px-4 py-3 hover:bg-white/10 transition-colors border-t border-white/5 first:border-t-0 flex items-center gap-3"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                          <circle cx="12" cy="10" r="3" />
-                        </svg>
-                      </div>
-                      <span className="font-medium">{place}</span>
-                    </button>
-                  ))}
-              </div>
+            <div className="absolute z-20 w-full mt-2 bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+              {suggestions
+                .filter((p) =>
+                  p.toLowerCase().includes(formData.placeName.toLowerCase()),
+                )
+                .map((place, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => selectSuggestion(place)}
+                    className="w-full text-left px-5 py-4 hover:bg-white/5 border-b border-white/5 last:border-0 text-sm font-bold flex items-center gap-3"
+                  >
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />{" "}
+                    {place}
+                  </button>
+                ))}
             </div>
           )}
         </div>
 
-        {/* El resto de tu formulario permanece igual... */}
-        {/* Marcador */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-green-500/70 ml-1">
-              Goles Favor
-            </label>
-            <input
-              type="number"
-              min="0"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-center text-2xl font-black text-white"
-              value={formData.goalsFor}
-              onChange={(e) =>
-                setFormData({ ...formData, goalsFor: Number(e.target.value) })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-red-500/70 ml-1">
-              Goles Contra
-            </label>
-            <input
-              type="number"
-              min="0"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-center text-2xl font-black text-white"
-              value={formData.goalsAgainst}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  goalsAgainst: Number(e.target.value),
-                })
-              }
-            />
-          </div>
-        </div>
-
-        {/* Tipo de Cancha - Estilo Botones */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">
-            Tipo de Cancha
+        {/* SELECTOR DE FECHA RÁPIDO */}
+        <div className="space-y-3">
+          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1 flex justify-between">
+            Día del Encuentro
+            {selectedDate && (
+              <span className="text-green-500">
+                {selectedDate.toLocaleDateString()}
+              </span>
+            )}
           </label>
-          <div className="grid grid-cols-3 gap-2">
-            {["FIVE", "SEVEN", "ELEVEN"].map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setFormData({ ...formData, courtType: type })}
-                className={`py-2 rounded-xl text-[10px] font-bold transition-all border ${formData.courtType === type
-                    ? "bg-white text-black border-white"
-                    : "bg-transparent text-gray-500 border-white/10 hover:border-white/30"
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            {quickDates.map((date, index) => {
+              const isSelected =
+                selectedDate.toDateString() === date.toDateString();
+              const dayName = date.toLocaleDateString("es-ES", {
+                weekday: "short",
+              });
+              const dayNum = date.getDate();
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => setSelectedDate(date)}
+                  className={`shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all border ${
+                    isSelected
+                      ? "bg-green-500 border-green-500 text-black shadow-lg scale-105"
+                      : "bg-white/5 border-white/5 text-gray-500 hover:border-white/20"
                   }`}
-              >
-                F{type === "FIVE" ? "5" : type === "SEVEN" ? "7" : "11"}
-              </button>
-            ))}
+                >
+                  <span
+                    className={`text-[10px] font-black uppercase ${isSelected ? "text-black/60" : "text-gray-600"}`}
+                  >
+                    {index === 0 ? "Hoy" : dayName.replace(".", "")}
+                  </span>
+                  <span className="text-xl font-black">{dayNum}</span>
+                </button>
+              );
+            })}
+            <div className="shrink-0 w-16 h-20 rounded-2xl border border-dashed border-white/10 flex items-center justify-center text-gray-700">
+              <Calendar size={20} />
+            </div>
           </div>
         </div>
 
-        {/* Fecha y Hora */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">
-            Fecha de Partido
-          </label>
-          <DatePicker
-            selected={selectedDate}
-            onChange={handleDateChange}
-            dateFormat="dd/MM/yyyy"
-            locale={es}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-green-500/50"
-            showTimeSelect={false}
-            showPopperArrow={false}
-            popperPlacement="bottom-start"
-          />
+        {/* MARCADOR */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1 text-center block">
+              Favor
+            </label>
+            <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl p-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((f) => ({
+                    ...f,
+                    goalsFor: Math.max(0, f.goalsFor - 1),
+                  }))
+                }
+                className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 text-white"
+              >
+                <Minus size={16} />
+              </button>
+              <span className="text-3xl font-black text-white">
+                {formData.goalsFor}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((f) => ({ ...f, goalsFor: f.goalsFor + 1 }))
+                }
+                className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 text-green-500"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1 text-center block">
+              Contra
+            </label>
+            <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl p-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((f) => ({
+                    ...f,
+                    goalsAgainst: Math.max(0, f.goalsAgainst - 1),
+                  }))
+                }
+                className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 text-white"
+              >
+                <Minus size={16} />
+              </button>
+              <span className="text-3xl font-black text-white">
+                {formData.goalsAgainst}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((f) => ({
+                    ...f,
+                    goalsAgainst: f.goalsAgainst + 1,
+                  }))
+                }
+                className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 text-red-500"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-2">
+        {/* HORA */}
+        <div className="space-y-3">
           <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">
-            Hora de Partido
+            Hora
           </label>
           <TimePickerCustom
             selectedTime={selectedTimeString}
-            onChange={handleTimeChange}
+            onChange={setSelectedTimeString}
             minuteInterval={10}
             hourInterval={1}
           />
         </div>
 
+        {/* PERFORMANCE */}
         <div className="space-y-3">
           <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">
-            ¿Cómo te sentiste en la cancha?
+            Tu nivel hoy
           </label>
           <div className="flex justify-between gap-2">
             {performances.map((p) => (
@@ -394,30 +357,28 @@ export const MatchForm: React.FC<MatchFormProps> = ({
                 onClick={() =>
                   setFormData({ ...formData, performance: p.value })
                 }
-                className={`flex-1 flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all duration-300 ${formData.performance === p.value
-                    ? "bg-white/10 border-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-110"
-                    : `bg-transparent border-white/5 ${p.color} grayscale hover:grayscale-0`
-                  }`}
+                className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${
+                  formData.performance === p.value
+                    ? "bg-white/10 border-white scale-110 shadow-xl"
+                    : "bg-transparent border-white/5 grayscale opacity-40 hover:opacity-100"
+                }`}
               >
                 <span className="text-2xl">{p.emoji}</span>
-                <span className="text-[8px] font-bold uppercase tracking-tighter text-gray-400">
-                  {p.label}
-                </span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Botón Submit */}
+        {/* SUBMIT */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-green-500 hover:bg-green-400 disabled:bg-gray-800 disabled:text-gray-600 text-black font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] mt-4 active:scale-95"
+          className="w-full bg-green-500 hover:bg-green-400 disabled:bg-gray-800 disabled:text-gray-600 text-black font-black py-5 rounded-2xl transition-all shadow-[0_0_30px_rgba(34,197,94,0.2)] active:scale-95"
         >
           {loading
-            ? "GUARDANDO..."
+            ? "PROCESANDO..."
             : initialData
-              ? "ACTUALIZAR CAMBIOS"
+              ? "GUARDAR CAMBIOS"
               : "REGISTRAR PARTIDO"}
         </button>
       </form>
