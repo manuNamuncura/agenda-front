@@ -14,8 +14,6 @@ export const TimePickerCustom: React.FC<TimePickerCustomProps> = ({
   minuteInterval = 10,
 }) => {
   const [currentH, currentM] = (selectedTime || "00:00").split(":");
-  //const timeToParse = selectedTime || "00:00";
-  //const [selectedHour, selectedMinute] = timeToParse.split(":").map(Number);
 
   const generateTimes = (interval: number, max: number) => {
     const times = [];
@@ -27,16 +25,6 @@ export const TimePickerCustom: React.FC<TimePickerCustomProps> = ({
 
   const hours = generateTimes(hourInterval, 24);
   const minutes = generateTimes(minuteInterval, 60);
-
-  // const handleHourChange = (hour: string) => {
-  //   const minuteStr = String(selectedMinute).padStart(2, "0");
-  //   onChange(`${hour}:${minuteStr}`);
-  // };
-
-  // const handleMinuteChange = (minute: string) => {
-  //   const hourStr = String(selectedHour).padStart(2, "0");
-  //   onChange(`${hourStr}:${minute}`);
-  // };
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-white/5 rounded-xl border borde-white/10">
@@ -64,23 +52,6 @@ export const TimePickerCustom: React.FC<TimePickerCustomProps> = ({
               </button>
             );
           })}
-          {/* {hours.map((hour) => (
-            <button
-              key={hour}
-              type="button"
-              onClick={() => handleHourChange(hour)}
-              className={cn(
-                "py-2 rounded-lg text-sm font-bold transition-all border",
-                "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10",
-                {
-                  "bg-green-500 text-black border-green-500 shadow-md":
-                    selectedHour === Number(hour),
-                }
-              )}
-            >
-              {hour}
-            </button>
-          ))} */}
         </div>
       </div>
 
@@ -92,7 +63,6 @@ export const TimePickerCustom: React.FC<TimePickerCustomProps> = ({
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
           {minutes.map((m) => {
             const isSelected = m === currentM;
-
             return (
               <button
                 key={m}
@@ -109,24 +79,6 @@ export const TimePickerCustom: React.FC<TimePickerCustomProps> = ({
               </button>
             );
           })}
-
-          {/* {minutes.map((minute) => (
-            <button
-              key={minute}
-              type="button"
-              onClick={() => handleMinuteChange(minute)}
-              className={cn(
-                "py-2 rounded-lg text-sm font-bold transition-all border",
-                "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10",
-                {
-                  "bg-green-500 text-black border-green-500 shadow-md":
-                    selectedMinute === Number(minute),
-                }
-              )}
-            >
-              {minute}
-            </button>
-          ))} */}
         </div>
       </div>
     </div>
