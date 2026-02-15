@@ -11,7 +11,7 @@ export interface PlaceStats {
   goalsAgainst: number;
   winRate: number;
   goalsDifference: number;
-  lastPlayed: string; // o Date si haces transformación
+  lastPlayed: string;
 }
 
 export type UpdateMatchDTO = Partial<Omit<Match, "date">> & { date?: string };
