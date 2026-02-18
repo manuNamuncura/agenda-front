@@ -119,6 +119,7 @@ const MatchCard = ({ match, onDelete, onEdit }: MatchCardProps) => {
         onConfirm={() => onDelete(match.id)}
         title="¿Eliminar Partido?"
         message={`¿Estás seguro que quieres borrar el partido en "${match.placeName}"? Esta acción eliminará los goles y estadísticas permanentemente.`}
+        confirmText="Sí, eliminar"
       />
     </>
   );
