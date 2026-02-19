@@ -34,7 +34,6 @@ export const HistoryView: React.FC = () => {
 
   // 2. Función para eliminar (Real)
   const handleDelete = async (id: string) => {
-    if (!window.confirm("¿Seguro que quieres borrar este partido?")) return;
 
     try {
       await matchService.deleteMatch(id);
