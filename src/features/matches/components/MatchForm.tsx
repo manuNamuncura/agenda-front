@@ -263,6 +263,14 @@ export const MatchForm: React.FC<MatchFormProps> = ({
         </div>
 
         {/* MARCADOR */}
+        <div className="mt-12 p-3 bg-blue-500/5 border border-blue-500/10 rounded-4xl flex gap-4 items-center">
+          <div className="shrink-0 w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400">
+            ☝
+          </div>
+          <p className="text-blue-400/80 text-[11px] leading-relaxed">
+            Se agrega solo los goles de diferencia.
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1 text-center block">
