@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import { cn } from "../../../utils/cn"; // Asegúrate de tener esta utilidad o cámbiala por string templates
+import { cn } from "../../../utils/cn";
 
 export const HistoryView: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -32,7 +32,6 @@ export const HistoryView: React.FC = () => {
       const data = await matchService.getAllMatches();
       setMatches(data || []);
 
-      // Opcional: Expandir el primer mes por defecto al cargar
       if (data && data.length > 0) {
         const firstMonth = new Date(data[0].date).toLocaleDateString("es-ES", {
           month: "long",
@@ -125,7 +124,7 @@ export const HistoryView: React.FC = () => {
           </h2>
         </div>
 
-        {/* MINI DASHBOARD (Compacto) */}
+        {/* MINI DASHBOARD*/}
         <div className="grid grid-cols-3 gap-3 mb-8">
           <div className="bg-white/3 border border-white/5 rounded-3xl p-4 text-center">
             <Hash size={14} className="mx-auto mb-1 text-gray-600" />
