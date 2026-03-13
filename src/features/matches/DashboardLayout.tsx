@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import { BottomNav } from "../../components/ui/BottomNav"; // Ajusta la ruta
+import { BottomNav } from "../../components/ui/BottomNav";
 
 export function DashboardLayout() {
   return (
