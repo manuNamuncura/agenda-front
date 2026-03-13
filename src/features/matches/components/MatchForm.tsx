@@ -173,6 +173,18 @@ export const MatchForm: React.FC<MatchFormProps> = ({
     },
   ];
 
+  const courtTypes = [
+    { value: "FIVE", label: "5" },
+    { value: "SEVEN", label: "7" },
+    { value: "ELEVEN", label: "11" },
+  ];
+
+  const categories = [
+    { value: "FRIENDS", label: "Amigos" },
+    { value: "FRIENDLY", label: "Amistoso" },
+    { value: "COMPETITIVE", label: "Por puntos" },
+  ];
+
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -259,6 +271,54 @@ export const MatchForm: React.FC<MatchFormProps> = ({
             <div className="shrink-0 w-16 h-20 rounded-2xl border border-dashed border-white/10 flex items-center justify-center text-gray-700">
               <Calendar size={20} />
             </div>
+          </div>
+        </div>
+
+        {/* TIPO DE CANCHA Y CATEGORÍA */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Court Type */}
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">
+              Cancha
+            </label>
+            <div className="flex gap-2">
+              {courtTypes.map((type) => (
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() =>
+                    setFormData({ ...formData, courtType: type.value })
+                  }
+                  className={`flex-1 py-3 rounded-xl text-sm font-bold border transition-all ${
+                    formData.courtType === type.value
+                      ? "bg-green-500 border-green-500 text-black"
+                      : "bg-white/5 border-white/5 text-gray-400"
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Category */}
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">
+              Categoría
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-3 text-white text-sm focus:outline-none focus:border-green-500"
+            >
+              {categories.map((cat) => (
+                <option key={cat.value} value={cat.value} className="bg-black">
+                  {cat.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

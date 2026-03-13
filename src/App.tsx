@@ -1,6 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { Toaster } from "react-hot-toast";
-import "./App.css";
 import { DashboardLayout } from "./features/matches/DashboardLayout";
 import { HomeView } from "./features/matches/View/HomeView";
 import { HistoryView } from "./features/matches/View/HistoryView";
