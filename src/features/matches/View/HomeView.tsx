@@ -33,15 +33,25 @@ export const HomeView: React.FC = () => {
     );
   }
 
+  const totalMatches = matches.length;
+
   const stats = {
-    total: matches.length,
+    total: totalMatches,
     wins: matches.filter((m) => m.result === "WON").length,
-    winRate: Math.round(
-      (matches.filter((m) => m.result === "WON").length / matches.length) * 100,
-    ),
-    avgGoals: (
-      matches.reduce((acc, m) => acc + m.goalsFor, 0) / matches.length
-    ).toFixed(1),
+    // Validamos si hay partidos para evitar NaN
+    winRate:
+      totalMatches > 0
+        ? Math.round(
+            (matches.filter((m) => m.result === "WON").length / totalMatches) *
+              100,
+          )
+        : 0,
+    avgGoals:
+      totalMatches > 0
+        ? (
+            matches.reduce((acc, m) => acc + m.goalsFor, 0) / totalMatches
+          ).toFixed(1)
+        : "0.0",
   };
 
   // Función de rango (la que ya tenías)
@@ -138,20 +148,26 @@ export const HomeView: React.FC = () => {
               Últimos 5
             </p>
             <div className="flex gap-2">
-              {matches.slice(0, 5).map((m) => (
-                <div
-                  key={m.id}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black ${
-                    m.result === "WON"
-                      ? "bg-green-500 text-black"
-                      : m.result === "LOST"
-                        ? "bg-red-500/20 text-red-500 border border-red-500/20"
-                        : "bg-gray-500/20 text-gray-400"
-                  }`}
-                >
-                  {m.result[0]}
-                </div>
-              ))}
+              {matches.length > 0 ? (
+                matches.slice(0, 5).map((m) => (
+                  <div
+                    key={m.id}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black ${
+                      m.result === "WON"
+                        ? "bg-green-500 text-black"
+                        : m.result === "LOST"
+                          ? "bg-red-500/20 text-red-500 border border-red-500/20"
+                          : "bg-gray-500/20 text-gray-400"
+                    }`}
+                  >
+                    {m.result[0]}
+                  </div>
+                ))
+              ) : (
+                <span className="text-[10px] text-gray-600 uppercase font-black">
+                  Sin datos
+                </span>
+              )}
             </div>
           </div>
         </div>
