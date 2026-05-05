@@ -182,7 +182,7 @@ export const MatchForm: React.FC<MatchFormProps> = ({
   const categories = [
     { value: "FRIENDS", label: "Amigos" },
     { value: "FRIENDLY", label: "Amistoso" },
-    { value: "COMPETITIVE", label: "Por puntos" },
+    { value: "TOURNAMENT", label: "Por puntos" },
   ];
 
   return (
